@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDemoData } from '../../context/DemoDataContext';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { QrCode, Download, CheckCircle2, Box } from 'lucide-react';
+import { QrCode, Download, CheckCircle2, Box, ExternalLink } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 export function PackagingPage() {
@@ -138,10 +138,34 @@ export function PackagingPage() {
           
           {lastPrintedQR ? (
             <div className="bg-white p-6 rounded-xl text-center space-y-4 shadow-2xl animate-scaleIn">
-              <QRCodeSVG value={`https://siragu.demo/verify/${lastPrintedQR}`} size={160} />
+              <a 
+                href={`/verify/${lastPrintedQR}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block hover:opacity-90 transition-opacity cursor-pointer"
+                title="Klik untuk membuka hasil verifikasi QR di tab baru"
+              >
+                <QRCodeSVG 
+                  value={typeof window !== 'undefined' ? `${window.location.origin}/verify/${lastPrintedQR}` : `https://siragu-trace.vercel.app/verify/${lastPrintedQR}`} 
+                  size={160} 
+                />
+              </a>
               <div className="text-slate-800">
                 <p className="font-black text-xl tracking-widest">{lastPrintedQR}</p>
                 <p className="text-xs font-medium text-slate-500 uppercase tracking-widest mt-1">Tersertifikasi Organik</p>
+                <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col items-center gap-1">
+                  <a 
+                    href={`/verify/${lastPrintedQR}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-bold underline cursor-pointer"
+                  >
+                    <ExternalLink size={13} /> Buka Halaman Verifikasi
+                  </a>
+                  <span className="text-[10px] text-slate-400">
+                    (Dapat dipindai kamera HP via link produksi/Vercel)
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
@@ -186,9 +210,20 @@ export function PackagingPage() {
               {packages.map((pkg) => (
                 <tr key={pkg.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-6 py-4">
-                    <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 text-xs">
-                      {pkg.serialNumber}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 text-xs">
+                        {pkg.serialNumber}
+                      </span>
+                      <a 
+                        href={`/verify/${pkg.serialNumber}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800 font-bold inline-flex items-center gap-0.5"
+                        title="Lihat halaman verifikasi publik"
+                      >
+                        <ExternalLink size={12} /> Cek
+                      </a>
+                    </div>
                   </td>
                   <td className="px-6 py-4 font-bold text-slate-800">{pkg.lotCode}</td>
                   <td className="px-6 py-4 font-medium text-slate-600">{pkg.packageSize}</td>

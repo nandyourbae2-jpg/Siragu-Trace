@@ -22,7 +22,8 @@ export function BuyerAccessPage() {
 
   const generateMagicLink = (buyerId: string) => {
     // Simulasi pembuatan token URL rahasia
-    return `https://siragu.demo/shared-dossier/B2B-${buyerId.toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://siragu-trace.vercel.app';
+    return `${origin}/shared-dossier/B2B-${buyerId.toUpperCase()}-${Math.floor(Math.random() * 10000)}`;
   };
 
   const handleCopyLink = (link: string) => {
