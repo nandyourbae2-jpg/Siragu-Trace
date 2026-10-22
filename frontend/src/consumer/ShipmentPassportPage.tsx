@@ -14,7 +14,8 @@ import {
   FileText,
   AlertTriangle,
   Box,
-  Layers
+  Layers,
+  QrCode
 } from 'lucide-react';
 
 export function ShipmentPassportPage() {
@@ -219,6 +220,16 @@ export function ShipmentPassportPage() {
           >
             <Download size={16} />
             {isEn ? 'Download Shipment Dossier' : 'Unduh Berkas Resmi (PDF)'}
+          </a>
+
+          <a
+            href="/qr-kit"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-bold transition shadow-xs mt-2.5"
+          >
+            <QrCode size={15} className="text-blue-700" />
+            {isEn ? 'Download QR Code & Box Label' : 'Unduh QR Code & Stiker Box'}
           </a>
         </section>
 

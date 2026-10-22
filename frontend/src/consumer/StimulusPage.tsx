@@ -9,7 +9,8 @@ import {
   Award, 
   FileText, 
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 
 export function StimulusPage({ mode }: { mode: 'low' | 'high' }) {
@@ -102,10 +103,18 @@ export function StimulusPage({ mode }: { mode: 'low' | 'high' }) {
           </section>
         )}
 
-        <div className="text-center pt-2">
+        <div className="text-center pt-2 flex flex-col items-center gap-2">
           <Link to="/v/DEMOPASSPORT" className="text-xs text-emerald-700 font-bold hover:underline">
             Lihat Paspor Produksi Standar ➔
           </Link>
+          <a
+            href="/qr-kit"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 bg-white px-3.5 py-1.5 rounded-full border border-slate-200 font-semibold shadow-xs transition"
+          >
+            <Download size={13} className="text-purple-600" /> Unduh QR Code Stimulus Ini
+          </a>
         </div>
 
       </div>

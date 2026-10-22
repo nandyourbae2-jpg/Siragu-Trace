@@ -31,6 +31,7 @@ import { CertificatesVaultPage } from './settings/CertificatesVaultPage';
 import { SupplierAnalyticsPage } from './reports/SupplierAnalyticsPage';
 import { DistributionPage } from './workflows/distribution/DistributionPage';
 import { SharedDossierPage } from './buyer/SharedDossierPage';
+import { QrHubPage } from './pages/QrHubPage';
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,9 @@ function App() {
             {/* ── Public routes ── */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/qr-kit" element={<QrHubPage />} />
+            <Route path="/download-qr" element={<QrHubPage />} />
+            <Route path="/qr-hub" element={<QrHubPage />} />
             <Route path="/403" element={<UnauthorizedPage />} />
             <Route path="/v/:token" element={<PublicQrPage />} />
             <Route path="/verify/:serial" element={<PublicQrPage />} />

@@ -224,6 +224,14 @@ export function PackagingPage() {
             >
               <LayoutGrid size={15} /> Cetak Lembar A4 (Grid 24 Stiker)
             </button>
+            <a
+              href="/qr-kit"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-2 transition shadow-sm text-center"
+            >
+              <Download size={15} /> Pusat Unduh QR Kit Lengkap
+            </a>
           </div>
         </div>
       </div>

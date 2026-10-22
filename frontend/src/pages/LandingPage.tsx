@@ -13,8 +13,10 @@ import {
   Layers,
   Sparkles,
   Award,
-  ExternalLink
+  ExternalLink,
+  Download
 } from 'lucide-react';
+import { QrKitSection } from '@/components/qr/QrKitSection';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
@@ -47,8 +49,10 @@ export const LandingPage = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
             <a href="#fitur" className="hover:text-blue-600 transition-colors">Fitur Unggulan</a>
             <a href="#cara-kerja" className="hover:text-blue-600 transition-colors">Cara Kerja</a>
-            <a href="#harga" className="hover:text-blue-600 transition-colors">Paket Pilot</a>
-            <a href="/verify/PKG-2026-0001" className="text-emerald-700 hover:text-emerald-800 font-semibold flex items-center gap-1">
+            <a href="#qr-kit" className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1">
+              <Download size={14} /> Download QR Kit
+            </a>
+            <a href="/verify/PKG-2026-0001" className="text-blue-700 hover:text-blue-800 font-semibold flex items-center gap-1">
               <Sparkles size={14} /> Coba Scan QR
             </a>
           </div>
@@ -89,6 +93,12 @@ export const LandingPage = () => {
             >
               Coba Aplikasi Sekarang <ArrowRight size={18} />
             </button>
+            <a 
+              href="#qr-kit" 
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Download size={17} /> Unduh QR Code & Stiker
+            </a>
             <button 
               onClick={() => document.getElementById('masalah')?.scrollIntoView({ behavior: 'smooth' })} 
               className="w-full sm:w-auto bg-white hover:bg-gray-50 text-[#213183] px-8 py-3.5 rounded-full text-sm font-bold transition-all shadow-lg cursor-pointer"
@@ -330,6 +340,9 @@ export const LandingPage = () => {
           </div>
         </div>
       </section>
+
+      {/* 6.5. QR Kit Section (Download QR & Printable Labels) */}
+      <QrKitSection />
 
       {/* 7. Formulir Permintaan Demo */}
       <section id="demo-form" className="py-20 px-6 bg-gray-50 border-t border-gray-100">

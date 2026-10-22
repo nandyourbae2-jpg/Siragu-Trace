@@ -16,7 +16,8 @@ import {
   Languages,
   Award,
   Clock,
-  Sparkles
+  Sparkles,
+  QrCode
 } from 'lucide-react';
 
 export function PublicQrPage() {
@@ -393,6 +394,16 @@ export function PublicQrPage() {
           >
             <Download size={16} />
             {isEn ? 'Download PDF Certificate' : 'Unduh Dokumen PDF Berstempel'}
+          </a>
+
+          <a
+            href="/qr-kit"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-bold transition shadow-xs mt-2.5"
+          >
+            <QrCode size={15} className="text-emerald-700" />
+            {isEn ? 'Download QR Code & Printable Sticker' : 'Unduh QR Code & Stiker Sampel'}
           </a>
         </section>
 
