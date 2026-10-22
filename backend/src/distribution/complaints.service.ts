@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { TraceService, type TraceNode } from '../trace/trace.service.js';
+import { TraceService } from '../trace/trace.service.js';
+import type { LotTraceNode, TraceResponse } from '../trace/trace.types.js';
 import { ComplaintStatus, Prisma } from '@prisma/client';
 
 export interface CreateComplaintDto {
@@ -57,12 +58,13 @@ export class ComplaintsService {
     }
 
     // 1. Backward Trace (Root Cause Analysis - find Suppliers)
-    const backwardGraph = await this.traceSvc.traceLineage(orgId, targetLotId, 'backward', 10);
-    const relatedSuppliers = this.extractSuppliers(backwardGraph);
+    const backwardGraph = await this.traceSvc.trace(orgId, targetLotId, 'backward', 10);
+    const backwardNodes = this.collectNodes(backwardGraph, 'upstream');
+    const relatedSuppliers = this.extractSuppliers(backwardNodes);
 
     // 2. Forward Trace (Exposure Analysis - find Buyers, Shipments, Packages)
-    const forwardGraph = await this.traceSvc.traceLineage(orgId, targetLotId, 'forward', 10);
-    const affectedLots = this.extractLotIds(forwardGraph);
+    const forwardGraph = await this.traceSvc.trace(orgId, targetLotId, 'forward', 10);
+    const affectedLots = this.collectNodes(forwardGraph, 'downstream').map((n) => n.id);
 
     // Find affected packages & shipments from the affected lots
     const affectedPackages = await this.prisma.package.findMany({
@@ -86,7 +88,7 @@ export class ComplaintsService {
 
     const impactScope = {
       generatedAt: new Date().toISOString(),
-      backwardTraceLots: this.extractLotIds(backwardGraph),
+      backwardTraceLots: backwardNodes.map((n) => n.id),
       relatedSuppliers: Array.from(relatedSuppliers),
       forwardTraceLots: affectedLots,
       affectedPackages: affectedPackages.map(p => p.packageCode),
@@ -140,31 +142,17 @@ export class ComplaintsService {
     });
   }
 
-  // Helper to extract unique suppliers from a trace graph
-  private extractSuppliers(graph: TraceNode[]): Set<string> {
-    const suppliers = new Set<string>();
-    const traverse = (nodes: TraceNode[]) => {
-      for (const node of nodes) {
-        if (node.lot.supplierId) {
-          suppliers.add(node.lot.supplierId); // In a real app we'd fetch the name, but ID is fine for MVP logic
-        }
-        if (node.children) traverse(node.children);
-      }
-    };
-    traverse(graph);
-    return suppliers;
+  /** Root lot plus the nodes on one side of the trace (the root is always in scope). */
+  private collectNodes(graph: TraceResponse, side: 'upstream' | 'downstream'): LotTraceNode[] {
+    return [graph.root, ...graph[side]];
   }
 
-  // Helper to extract all lot IDs involved in a trace
-  private extractLotIds(graph: TraceNode[]): string[] {
-    const ids = new Set<string>();
-    const traverse = (nodes: TraceNode[]) => {
-      for (const node of nodes) {
-        ids.add(node.lot.id);
-        if (node.children) traverse(node.children);
-      }
-    };
-    traverse(graph);
-    return Array.from(ids);
+  // Helper to extract unique supplier IDs from trace nodes
+  private extractSuppliers(nodes: LotTraceNode[]): Set<string> {
+    const suppliers = new Set<string>();
+    for (const node of nodes) {
+      if (node.supplierId) suppliers.add(node.supplierId);
+    }
+    return suppliers;
   }
 }

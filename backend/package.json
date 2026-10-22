@@ -24,7 +24,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset --force && prisma db seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -59,7 +60,7 @@
     "@types/express": "^5.0.0",
     "@types/express-session": "^1.19.0",
     "@types/node": "^24.0.0",
-    "@types/supertest": "^7.0.0",
+    "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^4.1.2",
     "oxlint": "^1.58.0",
     "oxlint-tsgolint": "^7.0.2001",
@@ -76,8 +77,5 @@
     "@prisma/client@5.22.0": true,
     "@prisma/engines@5.22.0": true,
     "prisma@5.22.0": true
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   }
 }
