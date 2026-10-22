@@ -46,9 +46,10 @@ export const LandingPage = () => {
             <span>SIRAGU Trace</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
             <a href="#fitur" className="hover:text-blue-600 transition-colors">Fitur Unggulan</a>
             <a href="#cara-kerja" className="hover:text-blue-600 transition-colors">Cara Kerja</a>
+            <a href="#harga" className="hover:text-blue-600 transition-colors">Paket Pilot</a>
             <a href="#qr-kit" className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1">
               <Download size={14} /> Download QR Kit
             </a>
@@ -57,18 +58,19 @@ export const LandingPage = () => {
             </a>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button 
               onClick={() => navigate('/login')} 
-              className="text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors cursor-pointer"
+              className="text-xs font-bold text-gray-700 hover:text-blue-600 px-3 py-2 transition-colors cursor-pointer"
             >
               Masuk Akun
             </button>
             <button 
-              onClick={() => document.getElementById('demo-form')?.scrollIntoView({ behavior: 'smooth' })} 
-              className="bg-[#0075DE] hover:bg-blue-700 text-white px-5 py-2.5 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer"
+              onClick={() => navigate('/app/dashboard')} 
+              className="bg-[#1B4D3E] hover:bg-[#143B30] text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              title="Buka seluruh 11 fitur aplikasi langsung dengan mode demo"
             >
-              Minta Demo Pilot
+              🚀 Buka Aplikasi (Demo)
             </button>
           </div>
         </div>
@@ -252,44 +254,59 @@ export const LandingPage = () => {
                 desc: 'Visualisasi grafis interaktif React Flow menghubungkan nira mentah hingga ke tangan pembeli akhir.',
                 icon: LinkIcon,
                 color: 'bg-blue-100 text-blue-600',
+                to: '/app/trace',
               },
               {
                 title: 'Gerbang Rilis Mutu (Release Gate)',
                 desc: 'Mencegah produk dikemas jika parameter SNI (kadar air < 2%) atau relasi petani belum lengkap (BR-004).',
                 icon: ShieldCheck,
                 color: 'bg-emerald-100 text-emerald-600',
+                to: '/app/operations/release',
               },
               {
                 title: 'Serialisasi Barcode QR Publik',
                 desc: 'Konsumen dapat memindai kemasan untuk melihat transparansi sertifikat organik dan cerita penderes.',
                 icon: Search,
                 color: 'bg-purple-100 text-purple-600',
+                to: '/v/DEMOPASSPORT',
               },
               {
                 title: 'Neraca Massa & Kalkulasi Rendemen',
                 desc: 'Validasi otomatis rendemen kristalisasi nira ke gula semut (12% - 15%) untuk mendeteksi kebocoran produksi.',
                 icon: Layers,
                 color: 'bg-amber-100 text-amber-600',
+                to: '/app/lots',
               },
               {
                 title: 'Telemetri Sensor Lingkungan (IoT)',
                 desc: 'Pemantauan suhu & kelembaban gudang penyimpanan dengan penegakan integritas data tanpa manipulasi (BR-011).',
                 icon: Activity,
                 color: 'bg-teal-100 text-teal-600',
+                to: '/app/iot',
               },
               {
                 title: 'Investigasi Keluhan & Dampak Recall',
                 desc: 'Pemetaan radius dampak saat terjadi komplain kadar air, menelusuri lot dan kemasan terkait seketika.',
                 icon: Map,
                 color: 'bg-rose-100 text-rose-600',
+                to: '/app/distribution',
               },
             ].map((f, i) => (
-              <div key={i} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs hover:shadow-md transition-shadow">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${f.color}`}>
-                  <f.icon size={22} />
+              <div 
+                key={i} 
+                onClick={() => navigate(f.to)}
+                className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs hover:shadow-md hover:border-blue-300 transition-all cursor-pointer flex flex-col justify-between group"
+              >
+                <div>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${f.color}`}>
+                    <f.icon size={22} />
+                  </div>
+                  <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">{f.title}</h3>
+                  <p className="text-xs text-gray-600 leading-relaxed">{f.desc}</p>
                 </div>
-                <h3 className="text-base font-bold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-xs text-gray-600 leading-relaxed">{f.desc}</p>
+                <div className="mt-4 pt-3 border-t border-gray-100 flex items-center text-xs font-bold text-[#0075DE] group-hover:translate-x-1 transition-transform">
+                  Buka Fitur Langsung <ArrowRight size={13} className="ml-1" />
+                </div>
               </div>
             ))}
           </div>

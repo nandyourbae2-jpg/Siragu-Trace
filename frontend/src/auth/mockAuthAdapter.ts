@@ -28,72 +28,163 @@ const ORG_B = {
 
 // ── Demo Users ────────────────────────────────────────────────────────────────
 
-const DEMO_USERS: Record<string, { password: string; user: AuthUser }> = {
+const DEMO_USERS: Record<string, { passwords: string[]; user: AuthUser }> = {
   'owner@siragu.demo': {
-    password: 'demo1234',
+    passwords: ['demo1234', 'Siragu2026!'],
     user: {
       id: 'user-owner-001',
       email: 'owner@siragu.demo',
-      name: 'Arjun Rajan',
+      name: 'Bambang Sugeng (Pemilik)',
       role: 'owner',
       organizationId: ORG_A.id,
-      organizationName: ORG_A.name,
-      initials: 'AR',
+      organizationName: 'Koperasi Nira Lestari Banyumas',
+      initials: 'BS',
+    },
+  },
+  'owner@siragu.id': {
+    passwords: ['demo1234', 'Siragu2026!'],
+    user: {
+      id: 'user-owner-001',
+      email: 'owner@siragu.id',
+      name: 'Bambang Sugeng (Pemilik)',
+      role: 'owner',
+      organizationId: ORG_A.id,
+      organizationName: 'Koperasi Nira Lestari Banyumas',
+      initials: 'BS',
+    },
+  },
+  'qa@siragu.demo': {
+    passwords: ['demo1234', 'Siragu2026!'],
+    user: {
+      id: 'user-qa-001',
+      email: 'qa@siragu.demo',
+      name: 'Dewi Sartika (Kepala Jaminan Mutu)',
+      role: 'qa',
+      organizationId: ORG_A.id,
+      organizationName: 'Koperasi Nira Lestari Banyumas',
+      initials: 'DS',
+    },
+  },
+  'qa@siragu.id': {
+    passwords: ['demo1234', 'Siragu2026!'],
+    user: {
+      id: 'user-qa-001',
+      email: 'qa@siragu.id',
+      name: 'Dewi Sartika (Kepala Jaminan Mutu)',
+      role: 'qa',
+      organizationId: ORG_A.id,
+      organizationName: 'Koperasi Nira Lestari Banyumas',
+      initials: 'DS',
     },
   },
   'operator@siragu.demo': {
-    password: 'demo1234',
+    passwords: ['demo1234', 'Siragu2026!'],
     user: {
       id: 'user-operator-001',
       email: 'operator@siragu.demo',
-      name: 'Priya Kumar',
+      name: 'Siti Rahma (Operator Pabrik)',
       role: 'operator',
       organizationId: ORG_A.id,
-      organizationName: ORG_A.name,
-      initials: 'PK',
+      organizationName: 'Koperasi Nira Lestari Banyumas',
+      initials: 'SR',
     },
   },
-
-
+  'operator@siragu.id': {
+    passwords: ['demo1234', 'Siragu2026!'],
+    user: {
+      id: 'user-operator-001',
+      email: 'operator@siragu.id',
+      name: 'Siti Rahma (Operator Pabrik)',
+      role: 'operator',
+      organizationId: ORG_A.id,
+      organizationName: 'Koperasi Nira Lestari Banyumas',
+      initials: 'SR',
+    },
+  },
+  'buyer@siragu.demo': {
+    passwords: ['demo1234', 'Siragu2026!'],
+    user: {
+      id: 'user-buyer-001',
+      email: 'buyer@siragu.demo',
+      name: 'Hendro Wicaksono (PT Megah Rasa Pangan)',
+      role: 'buyer',
+      organizationId: ORG_B.id,
+      organizationName: 'PT Megah Rasa Pangan',
+      initials: 'HW',
+    },
+  },
+  'buyer@siragu.id': {
+    passwords: ['demo1234', 'Siragu2026!'],
+    user: {
+      id: 'user-buyer-001',
+      email: 'buyer@siragu.id',
+      name: 'Hendro Wicaksono (PT Megah Rasa Pangan)',
+      role: 'buyer',
+      organizationId: ORG_B.id,
+      organizationName: 'PT Megah Rasa Pangan',
+      initials: 'HW',
+    },
+  },
 };
 
 // ── Session Storage Key ───────────────────────────────────────────────────────
 
 const SESSION_KEY = 'siragu_trace_session';
+const LOGGED_OUT_KEY = 'siragu_explicitly_logged_out';
 
 // ── Mock Adapter Implementation ───────────────────────────────────────────────
 
 export const mockAuthAdapter: AuthAdapter = {
   async login(email: string, password: string): Promise<AuthSession> {
-    // Simulate a short network delay.
-    await new Promise((r) => setTimeout(r, 400));
+    const normEmail = email.trim().toLowerCase();
+    const entry = DEMO_USERS[normEmail];
 
-    const record = DEMO_USERS[email.toLowerCase().trim()];
-    if (!record || record.password !== password) {
-      throw new Error('Invalid email or password.');
+    if (!entry) {
+      throw new Error('Email demo tidak terdaftar. Gunakan salah satu email demo yang tersedia.');
+    }
+
+    const isMatch = entry.passwords.includes(password) || password === 'demo1234' || password === 'Siragu2026!';
+    if (!isMatch) {
+      throw new Error('Kata sandi salah. Gunakan kata sandi demo: demo1234');
     }
 
     const session: AuthSession = {
-      user: record.user,
+      user: entry.user,
       issuedAt: new Date().toISOString(),
     };
 
+    sessionStorage.removeItem(LOGGED_OUT_KEY);
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
     return session;
   },
 
   async logout(): Promise<void> {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.setItem(LOGGED_OUT_KEY, 'true');
   },
 
   async restoreSession(): Promise<AuthSession | null> {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw) as AuthSession;
-    } catch {
+    if (sessionStorage.getItem(LOGGED_OUT_KEY) === 'true') {
       return null;
     }
+
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (raw) {
+      try {
+        return JSON.parse(raw) as AuthSession;
+      } catch {
+        // Fall through to default
+      }
+    }
+
+    // Default to owner session so all 11 features are immediately visible and testable
+    const defaultOwner = DEMO_USERS['owner@siragu.demo'].user;
+    const defaultSession: AuthSession = {
+      user: defaultOwner,
+      issuedAt: new Date().toISOString(),
+    };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(defaultSession));
+    return defaultSession;
   },
 };
 

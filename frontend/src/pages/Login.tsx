@@ -23,8 +23,10 @@ type LoginForm = z.infer<typeof loginSchema>;
 // ── Daftar Akun Demo (Ditampilkan di layar) ───────────────────────────────────
 
 const DEMO_CREDENTIALS = [
-  { role: 'Pemilik (Owner)', email: 'owner@siragu.demo', desc: 'Akses penuh portal CRM & laporan efisiensi', org: 'Koperasi Nira Lestari' },
-  { role: 'Operator Pabrik', email: 'operator@siragu.demo', desc: 'Penerimaan bahan, oven, pengemasan, & logistik', org: 'Koperasi Nira Lestari' },
+  { role: '👑 Pemilik (Owner)', email: 'owner@siragu.demo', desc: 'Akses penuh seluruh 11 fitur operasional', org: 'Koperasi Nira Lestari' },
+  { role: '🧪 Tim Mutu (QA)', email: 'qa@siragu.demo', desc: 'Persetujuan rilis, inspeksi & sertifikat', org: 'Koperasi Nira Lestari' },
+  { role: '⚙️ Operator Pabrik', email: 'operator@siragu.demo', desc: 'Penerimaan, oven, kemasan, & logistik', org: 'Koperasi Nira Lestari' },
+  { role: '🏢 Mitra Pembeli (Buyer)', email: 'buyer@siragu.demo', desc: 'Audit silsilah, dokumen, & sensor cold-chain', org: 'PT Megah Rasa Pangan' },
 ] as const;
 
 // ── Komponen Utama ────────────────────────────────────────────────────────────
@@ -52,6 +54,16 @@ export function LoginPage() {
       navigate(from, { replace: true });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : 'Gagal masuk akun.');
+    }
+  };
+
+  const handleInstantLogin = async (email: string) => {
+    setServerError(null);
+    try {
+      await login(email, 'demo1234');
+      navigate('/app/dashboard', { replace: true });
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'Gagal masuk.');
     }
   };
 
@@ -114,6 +126,21 @@ export function LoginPage() {
             <p className="mt-1 text-muted-foreground text-sm">
               Masuk ke dasbor sistem ketertelusuran koperasi dan pabrik Anda.
             </p>
+          </div>
+
+          {/* Akses Cepat Banner */}
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center justify-between gap-3">
+            <div className="text-xs">
+              <span className="font-bold block">Akses Demo Langsung (BPC)</span>
+              <span className="text-[11px] text-emerald-700">Masuk langsung dengan hak akses penuh Pemilik (11 Fitur).</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleInstantLogin('owner@siragu.demo')}
+              className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition shadow-xs flex-shrink-0 cursor-pointer"
+            >
+              Masuk Cepat ➔
+            </button>
           </div>
 
           {/* ── Formulir ── */}
@@ -196,23 +223,28 @@ export function LoginPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               Pilih Akun Demo Cepat (Kata Sandi: demo1234)
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {DEMO_CREDENTIALS.map((c) => (
                 <button
                   key={c.email}
-                  id={`demo-login-${c.role.toLowerCase().replace(/\s+/g, '-')}`}
+                  id={`demo-login-${c.email.split('@')[0]}`}
                   type="button"
-                  onClick={() => fillDemo(c.email)}
-                  className="group text-left p-2.5 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
+                  onClick={() => handleInstantLogin(c.email)}
+                  className="group text-left p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer bg-surface/50 shadow-xs flex flex-col justify-between"
                 >
-                  <span className="block text-xs font-semibold text-foreground group-hover:text-primary transition-colors">
-                    {c.role}
-                  </span>
-                  <span className="block text-[11px] text-muted-foreground truncate">
-                    {c.email}
-                  </span>
-                  <span className="block text-[10px] text-muted-foreground/75 truncate mt-0.5">
-                    {c.desc}
+                  <div>
+                    <span className="block text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                      {c.role}
+                    </span>
+                    <span className="block text-[11px] font-mono text-muted-foreground mt-0.5">
+                      {c.email}
+                    </span>
+                    <span className="block text-[10px] text-muted-foreground/80 mt-1 line-clamp-2 leading-relaxed">
+                      {c.desc}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 mt-2.5 text-[11px] font-bold text-primary group-hover:underline">
+                    Masuk Langsung ➔
                   </span>
                 </button>
               ))}
