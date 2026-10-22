@@ -20,10 +20,10 @@ import {
 } from 'react';
 
 import type { AuthAdapter, AuthSession, AuthUser } from './types';
-import { mockAuthAdapter } from './mockAuthAdapter';
+import { realAuthAdapter } from './realAuthAdapter';
 
-// ── Active Adapter (swap this line to switch implementations) ─────────────────
-const ACTIVE_AUTH_ADAPTER: AuthAdapter = mockAuthAdapter;
+// ── Active Adapter: real NestJS backend with mock fallback ───────────────────
+const ACTIVE_AUTH_ADAPTER: AuthAdapter = realAuthAdapter;
 
 // ── Context Types ─────────────────────────────────────────────────────────────
 

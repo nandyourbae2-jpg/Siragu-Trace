@@ -1,5 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service.js';
+import { runSeed } from '../prisma/seed.js';
 
 @Controller()
 export class AppController {
@@ -8,5 +9,15 @@ export class AppController {
   @Get()
   getHello(): string {
     return this.appService.getHello();
+  }
+
+  @Post('admin/reset-demo')
+  async resetDemo() {
+    await runSeed();
+    return {
+      success: true,
+      message: 'Golden Path demo state reset successfully.',
+      timestamp: new Date().toISOString(),
+    };
   }
 }

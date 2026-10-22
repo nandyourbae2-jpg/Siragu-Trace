@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { AuthenticatedUser } from './auth.types.js';
 import { ROLES_KEY } from './roles.decorator.js';
-import type { Role } from './auth.types.js';
+import { Role } from './auth.types.js';
 
 /**
  * RolesGuard — checks that the authenticated user has at least one of the
@@ -21,6 +21,18 @@ import type { Role } from './auth.types.js';
  *   @Post('lots')
  *   create() { ... }
  */
+/**
+ * Role hierarchy:
+ *   OWNER   → may do anything staff can do (ADMIN/OPERATOR/QA/MANAGER routes).
+ *   MANAGER → inherits OPERATOR and QA permissions (supervises both).
+ * BUYER and CONSUMER never inherit staff permissions.
+ */
+export function effectiveRoles(role: Role): Role[] {
+  if (role === Role.OWNER) return [Role.OWNER, Role.MANAGER, Role.OPERATOR, Role.QA, Role.ADMIN];
+  if (role === Role.MANAGER) return [Role.MANAGER, Role.OPERATOR, Role.QA];
+  return [role];
+}
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -41,7 +53,8 @@ export class RolesGuard implements CanActivate {
 
     if (!user) return false;
 
-    const hasRole = requiredRoles.includes(user.role as Role);
+    const userEffectiveRoles = effectiveRoles(user.role as Role);
+    const hasRole = userEffectiveRoles.some((r) => requiredRoles.includes(r));
     if (!hasRole) {
       throw new ForbiddenException(
         `Access denied. Required role(s): ${requiredRoles.join(', ')}. Your role: ${user.role}.`,

@@ -9,7 +9,7 @@
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
 
-export const ROLES = ['owner', 'operator'] as const;
+export const ROLES = ['owner', 'operator', 'qa', 'manager', 'admin', 'buyer'] as const;
 export type Role = (typeof ROLES)[number];
 
 // ── User / Session ────────────────────────────────────────────────────────────

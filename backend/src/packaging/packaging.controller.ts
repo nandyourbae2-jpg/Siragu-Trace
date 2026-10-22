@@ -18,13 +18,13 @@ export class PackagingController {
   @Post('lot/:lotId')
   @Roles(Role.OPERATOR, Role.OWNER, Role.ADMIN)
   createPackages(
-    @CurrentUser('organizationId') orgId: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Param('lotId') lotId: string,
     @Body('quantity') quantity: number,
     @Body('packageSize') packageSize: number,
     @Body('unit') unit: string,
   ) {
-    return this.pkgSvc.createPackages(orgId, lotId, quantity, packageSize, unit);
+    return this.pkgSvc.createPackages(user.organizationId!, lotId, quantity, packageSize, unit, user.id);
   }
 
   @Get('lot/:lotId')

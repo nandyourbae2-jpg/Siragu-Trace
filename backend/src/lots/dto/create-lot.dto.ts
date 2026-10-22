@@ -6,8 +6,9 @@ import {
   MinLength,
   IsPositive,
   IsObject,
+  IsBoolean,
 } from 'class-validator';
-import { LotStatus } from '@prisma/client';
+import { LotStatus, LotType, BpomType } from '@prisma/client';
 import { Type } from 'class-transformer';
 
 export class CreateLotDto {
@@ -19,10 +20,22 @@ export class CreateLotDto {
   @MinLength(1)
   productName!: string;
 
+  @IsOptional()
   @IsNumber()
   @IsPositive()
   @Type(() => Number)
-  quantity!: number;
+  quantity?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @Type(() => Number)
+  grossWeight?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Type(() => Number)
+  tareWeight?: number;
 
   @IsString()
   @MinLength(1)
@@ -33,8 +46,44 @@ export class CreateLotDto {
   status?: LotStatus;
 
   @IsOptional()
+  @IsEnum(LotType)
+  lotType?: LotType;
+
+  @IsOptional()
+  @IsString()
+  supplierId?: string;
+
+  @IsOptional()
+  @IsString()
+  siteId?: string;
+
+  @IsOptional()
   @IsString()
   locationId?: string;
+
+  @IsOptional()
+  @IsString()
+  batchNumber?: string;
+
+  @IsOptional()
+  @IsEnum(BpomType)
+  bpomType?: BpomType;
+
+  @IsOptional()
+  @IsString()
+  bpomNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  halalCertId?: string;
+
+  @IsOptional()
+  @IsString()
+  distributorName?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDemo?: boolean;
 
   @IsOptional()
   @IsString()

@@ -20,6 +20,8 @@ import { ReleaseQueuePage } from './workflows/quality/ReleaseQueuePage';
 import { PackagingPage } from './workflows/packaging/PackagingPage';
 import { IotPage } from './environment/IotPage';
 import { PublicQrPage } from './consumer/PublicQrPage';
+import { ShipmentPassportPage } from './consumer/ShipmentPassportPage';
+import { StimulusPage } from './consumer/StimulusPage';
 import { LandingPage } from './pages/LandingPage';
 
 // New architecture pages
@@ -43,8 +45,12 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/403" element={<UnauthorizedPage />} />
+            <Route path="/v/:token" element={<PublicQrPage />} />
             <Route path="/verify/:serial" element={<PublicQrPage />} />
+            <Route path="/s/:token" element={<ShipmentPassportPage />} />
             <Route path="/shared-dossier/:token" element={<SharedDossierPage />} />
+            <Route path="/stimulus/low" element={<StimulusPage mode="low" />} />
+            <Route path="/stimulus/high" element={<StimulusPage mode="high" />} />
 
             {/* ── Protected routes — must be authenticated ── */}
             <Route element={<RequireAuth />}>

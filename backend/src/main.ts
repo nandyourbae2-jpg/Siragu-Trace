@@ -14,6 +14,8 @@ async function bootstrap() {
     }),
   );
 
+  app.setGlobalPrefix('api', { exclude: ['/'] });
+
   // Allow frontend dev server.
   app.enableCors({
     origin: [

@@ -100,12 +100,62 @@ export function AppShell() {
                   <Building2 size={13} className="flex-shrink-0" />
                   <span className="truncate">{user.organizationName}</span>
                 </div>
+
+                {/* Quick Presentation Links */}
+                <div className="pt-2 border-t border-border space-y-1 text-xs">
+                  <a
+                    href="/v/DEMOPASSPORT"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-emerald-700 hover:underline font-semibold"
+                  >
+                    ↗ Paspor Konsumen (/v/DEMO)
+                  </a>
+                  <a
+                    href="/s/BOXDEMO0001"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-emerald-700 hover:underline font-semibold"
+                  >
+                    ↗ Paspor B2B Box (/s/BOX)
+                  </a>
+                  <a
+                    href="/offline-passport.html"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-slate-500 hover:underline font-semibold"
+                  >
+                    ↗ Paspor Offline Backup
+                  </a>
+                </div>
+
+                {/* Reset Golden Path */}
+                {(user.role === 'owner' || user.role === 'admin') && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (confirm('Reset seluruh data ke kondisi Golden Path awal?')) {
+                        try {
+                          await fetch('/api/admin/reset-demo', { method: 'POST' });
+                          alert('Golden Path berhasil direset!');
+                          window.location.reload();
+                        } catch {
+                          alert('Gagal mereset demo.');
+                        }
+                      }
+                    }}
+                    className="w-full text-left text-xs font-bold text-amber-700 hover:underline pt-1"
+                  >
+                    ↺ Reset Golden Path (1-Click)
+                  </button>
+                )}
+
                 {/* Logout */}
                 <button
                   id="sidebar-logout-button"
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-destructive hover:bg-destructive/10 transition-colors font-medium"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-destructive hover:bg-destructive/10 transition-colors font-medium border-t border-border mt-1"
                 >
                   <LogOut size={15} />
                   Keluar

@@ -11,6 +11,9 @@ import { NotFoundException, ConflictException } from '@nestjs/common';
 import { LotsService } from './lots.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
+import { BatchService } from '../common/batch.service.js';
+import { AuditService } from '../common/audit.service.js';
+
 function makePrisma() {
   return {
     lot: {
@@ -21,6 +24,7 @@ function makePrisma() {
       update: vi.fn(),
     },
     lotEvent: { create: vi.fn() },
+    auditLog: { create: vi.fn() },
     $transaction: vi.fn(),
   };
 }
@@ -32,7 +36,7 @@ const LOT_ALPHA = {
   productName: 'Jasmine Rice',
   quantity: 500,
   unit: 'kg',
-  status: 'ACTIVE',
+  status: 'DRAFT',
   deletedAt: null,
   location: null,
   createdBy: null,
@@ -41,13 +45,20 @@ const LOT_ALPHA = {
 describe('LotsService', () => {
   let service: LotsService;
   let prisma: ReturnType<typeof makePrisma>;
+  let batchService: { next: ReturnType<typeof vi.fn> };
+  let auditService: { log: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     prisma = makePrisma();
+    batchService = { next: vi.fn().mockResolvedValue('B24-0912-01') };
+    auditService = { log: vi.fn().mockResolvedValue(undefined) };
+
     const module = await Test.createTestingModule({
       providers: [
         LotsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: BatchService, useValue: batchService },
+        { provide: AuditService, useValue: auditService },
       ],
     }).compile();
     service = module.get(LotsService);

@@ -25,8 +25,23 @@ export class DistributionController {
     @Body('lotId') lotId: string,
     @Body('quantity') quantity: number,
     @Body('unit') unit: string,
+    @Body('distributorName') distributorName?: string,
+    @Body('legs') legs?: Array<{ fromName: string; toName: string; departAt?: Date | string; arriveAt?: Date | string }>,
+    @Body('boxCount') boxCount?: number,
   ) {
-    return this.shipmentSvc.createShipment(user.organizationId!, user.id, buyerId, lotId, quantity, unit);
+    return this.shipmentSvc.createShipment(user.organizationId!, user.id, buyerId, lotId, quantity, unit, distributorName, legs, boxCount);
+  }
+
+  @Get('shipments')
+  @Roles(Role.OPERATOR, Role.QA, Role.OWNER, Role.ADMIN)
+  getShipments(@CurrentUser('organizationId') orgId: string) {
+    return this.shipmentSvc.findAll(orgId);
+  }
+
+  @Get('shipments/:id')
+  @Roles(Role.OPERATOR, Role.QA, Role.OWNER, Role.ADMIN)
+  getShipment(@CurrentUser('organizationId') orgId: string, @Param('id') id: string) {
+    return this.shipmentSvc.findOne(orgId, id);
   }
 
   @Get('shipments/buyer/:buyerId')

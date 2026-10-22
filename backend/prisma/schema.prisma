@@ -14,10 +14,39 @@ datasource db {
 enum Role {
   ADMIN
   OWNER
+  MANAGER
   OPERATOR
   QA
   BUYER
   CONSUMER
+}
+
+/// BPOM registration number family (processed food). Validated per type in code.
+enum BpomType {
+  MD // Pangan olahan dalam negeri
+  ML // Pangan olahan impor
+  PIRT // P-IRT / SPP-IRT (industri rumah tangga)
+}
+
+enum CertificateType {
+  HALAL
+  ORGANIC_EU
+  ORGANIC_SNI
+  BPOM
+  OTHER
+}
+
+enum TempStatus {
+  NO_DATA
+  OK
+  WARNING
+  DEVIATION
+}
+
+enum AlertStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
 }
 
 /// Lot lifecycle state machine.
@@ -39,21 +68,21 @@ enum LotStatus {
 
 /// Indicates how a lot was produced (§42).
 enum LotType {
-  RECEIVED        // Raw material received from external supplier
-  MIX_OUTPUT      // Produced by a mixing operation (many inputs → 1 output)
-  SPLIT_OUTPUT    // Produced by splitting a parent lot (1 input → many outputs)
-  PROCESS_OUTPUT  // Produced by a general transformation process
-  REWORK_OUTPUT   // Produced by rework of a rejected lot
-  PACK_OUTPUT     // Final packaged unit
+  RECEIVED // Raw material received from external supplier
+  MIX_OUTPUT // Produced by a mixing operation (many inputs → 1 output)
+  SPLIT_OUTPUT // Produced by splitting a parent lot (1 input → many outputs)
+  PROCESS_OUTPUT // Produced by a general transformation process
+  REWORK_OUTPUT // Produced by rework of a rejected lot
+  PACK_OUTPUT // Final packaged unit
 }
 
 /// How two lots are related (§43).
 enum RelationType {
-  TRANSFORMED_TO  // Lot A was transformed into Lot B (general process)
-  MIXED_INTO      // Lot A (source) was mixed into Lot B (mix output)
-  SPLIT_FROM      // Lot B (output) was split from Lot A (parent)
-  REWORKED_FROM   // Lot B (output) was reworked from Lot A (rejected)
-  PACKED_FROM     // Lot B (pack) was packed from Lot A (ready lot)
+  TRANSFORMED_TO // Lot A was transformed into Lot B (general process)
+  MIXED_INTO // Lot A (source) was mixed into Lot B (mix output)
+  SPLIT_FROM // Lot B (output) was split from Lot A (parent)
+  REWORKED_FROM // Lot B (output) was reworked from Lot A (rejected)
+  PACKED_FROM // Lot B (pack) was packed from Lot A (ready lot)
 }
 
 /// Process event types (§13, §44).
@@ -63,15 +92,15 @@ enum ProcessEventType {
   MIXING
   REWORK
   PACKING_PREP
-  RECEIVING       // Initial lot ingestion from supplier
+  RECEIVING // Initial lot ingestion from supplier
   CUSTOM
 }
 
 /// Mass balance validation status (§15).
 enum MassBalanceStatus {
-  BALANCED  // |input - (output+waste+remaining)| ≤ tolerance (0.5%)
-  WARNING   // Difference 0.5%–5%, explanation required
-  BLOCKED   // Difference >5% or unexplained — lot cannot be released
+  BALANCED // |input - (output+waste+remaining)| ≤ tolerance (0.5%)
+  WARNING // Difference 0.5%–5%, explanation required
+  BLOCKED // Difference >5% or unexplained — lot cannot be released
 }
 
 /// Quality workflow status for Inspections.
@@ -115,6 +144,15 @@ model Organization {
   gateways      Gateway[]
   sensors       Sensor[]
   exportJobs    ExportJob[]
+
+  isDemo         Boolean         @default(false)
+  certificates   Certificate[]
+  batchSequences BatchSequence[]
+  boxes          Box[]
+  iotDevices     IotDevice[]
+  alerts         Alert[]
+  shareLinks     ShareLink[]
+  pdfSnapshots   PdfSnapshot[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,28 +160,28 @@ model Organization {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Site {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
   address        String?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization  @relation(fields: [organizationId], references: [id])
-  locations      Location[]
-  lots           Lot[]
-  processEvents  ProcessEvent[]
-  gateways       Gateway[]
-  sensors        Sensor[]
+  organization  Organization   @relation(fields: [organizationId], references: [id])
+  locations     Location[]
+  lots          Lot[]
+  processEvents ProcessEvent[]
+  gateways      Gateway[]
+  sensors       Sensor[]
 }
 
 model Location {
-  id        String         @id @default(uuid())
+  id        String   @id @default(uuid())
   siteId    String
   name      String
-  type      String         // WAREHOUSE | PROCESSING | LAB | FIELD
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  type      String // WAREHOUSE | PROCESSING | LAB | FIELD
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   site          Site           @relation(fields: [siteId], references: [id])
   lots          Lot[]
@@ -156,7 +194,7 @@ model Location {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Supplier {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
   code           String?
@@ -164,19 +202,26 @@ model Supplier {
   contactEmail   String?
   contactPhone   String?
   address        String?
-  isActive       Boolean      @default(true)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  lots           Lot[]        @relation("SupplierLots")
+  // Public profile (UU PDP): shown on the public passport ONLY when publicConsent is true.
+  publicName    String? // First name or farmer-group name
+  village       String?
+  district      String?
+  publicConsent Boolean   @default(false)
+  consentAt     DateTime?
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  lots         Lot[]        @relation("SupplierLots")
 
   @@unique([organizationId, code])
   @@index([organizationId, isActive])
 }
 
 model Buyer {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   name           String
   code           String?
@@ -184,12 +229,12 @@ model Buyer {
   contactEmail   String?
   contactPhone   String?
   address        String?
-  isActive       Boolean      @default(true)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  shipments      Shipment[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  shipments    Shipment[]
 
   @@unique([organizationId, code])
   @@index([organizationId, isActive])
@@ -200,29 +245,29 @@ model Buyer {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model User {
-  id             String        @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String?
-  email          String        @unique
+  email          String   @unique
   passwordHash   String
   name           String
   role           Role
-  isActive       Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-  auditLogs      AuditLog[]    @relation("UserAuditLogs")
-  lotsCreated    Lot[]         @relation("LotCreatedBy")
-  lotsReleased   Lot[]         @relation("LotReleasedBy")
-  lotEvents      LotEvent[]    @relation("LotEventActor")
-  processEvents  ProcessEvent[] @relation("ProcessEventCreatedBy")
-  refreshTokens  RefreshToken[]
-  inspections    Inspection[]  @relation("InspectorUser")
-  evidences      Evidence[]    @relation("EvidenceUploader")
-  qrActivations  QrSerial[]    @relation("QrActivatedBy")
-  complaints     Complaint[]   @relation("ComplaintResponsibleUser")
-  shipmentsCreated Shipment[]  @relation("ShipmentCreatedBy")
-  exportJobs     ExportJob[]   @relation("ExportJobRequestedBy")
+  organization     Organization?  @relation(fields: [organizationId], references: [id])
+  auditLogs        AuditLog[]     @relation("UserAuditLogs")
+  lotsCreated      Lot[]          @relation("LotCreatedBy")
+  lotsReleased     Lot[]          @relation("LotReleasedBy")
+  lotEvents        LotEvent[]     @relation("LotEventActor")
+  processEvents    ProcessEvent[] @relation("ProcessEventCreatedBy")
+  refreshTokens    RefreshToken[]
+  inspections      Inspection[]   @relation("InspectorUser")
+  evidences        Evidence[]     @relation("EvidenceUploader")
+  qrActivations    QrSerial[]     @relation("QrActivatedBy")
+  complaints       Complaint[]    @relation("ComplaintResponsibleUser")
+  shipmentsCreated Shipment[]     @relation("ShipmentCreatedBy")
+  exportJobs       ExportJob[]    @relation("ExportJobRequestedBy")
 }
 
 model RefreshToken {
@@ -233,7 +278,7 @@ model RefreshToken {
   revokedAt DateTime?
   createdAt DateTime  @default(now())
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -243,51 +288,67 @@ model RefreshToken {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Lot {
-  id             String      @id @default(uuid())
+  id             String    @id @default(uuid())
   organizationId String
-  lotCode        String      // Human-readable code within org
-  lotType        LotType     @default(RECEIVED)
+  lotCode        String // Human-readable code within org
+  lotType        LotType   @default(RECEIVED)
   productName    String
-  quantity       Decimal     @db.Decimal(12, 3)
+  quantity       Decimal   @db.Decimal(12, 3)
   unit           String
-  status         LotStatus   @default(DRAFT)
+  status         LotStatus @default(DRAFT)
   siteId         String?
   locationId     String?
-  supplierId     String?     // Set for RECEIVED lots
+  supplierId     String? // Set for RECEIVED lots
   createdById    String?
   releasedAt     DateTime?
   releasedById   String?
   description    String?
-  evidenceUrls   Json?       // String[] — photo/doc references
+  evidenceUrls   Json? // String[] — photo/doc references
   metadata       Json?
   deletedAt      DateTime?
 
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  // Go-live additions (all optional → backward compatible)
+  batchNumber     String? // B{YY}-{MMDD}-{NN}, unique per org
+  grossWeight     Decimal?     @db.Decimal(12, 3)
+  tareWeight      Decimal?     @db.Decimal(12, 3)
+  isDemo          Boolean      @default(false)
+  bpomType        BpomType?
+  bpomNumber      String?
+  halalCertId     String?
+  distributorName String?
+  tempMinC        Decimal      @default(20) @db.Decimal(5, 2)
+  tempMaxNormalC  Decimal      @default(26) @db.Decimal(5, 2)
+  tempAlarmC      Decimal      @default(27) @db.Decimal(5, 2)
+  rhAlarmPct      Decimal      @default(65) @db.Decimal(5, 2)
+  halalCert       Certificate? @relation(fields: [halalCertId], references: [id])
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  site           Site?        @relation(fields: [siteId], references: [id])
-  location       Location?    @relation(fields: [locationId], references: [id])
-  supplier       Supplier?    @relation("SupplierLots", fields: [supplierId], references: [id])
-  createdBy      User?        @relation("LotCreatedBy", fields: [createdById], references: [id])
-  releasedBy     User?        @relation("LotReleasedBy", fields: [releasedById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  site         Site?        @relation(fields: [siteId], references: [id])
+  location     Location?    @relation(fields: [locationId], references: [id])
+  supplier     Supplier?    @relation("SupplierLots", fields: [supplierId], references: [id])
+  createdBy    User?        @relation("LotCreatedBy", fields: [createdById], references: [id])
+  releasedBy   User?        @relation("LotReleasedBy", fields: [releasedById], references: [id])
 
   // Lineage — a lot can be source (contributed to others) or target (produced from others)
-  asSource       LotRelation[] @relation("SourceLot")
-  asTarget       LotRelation[] @relation("TargetLot")
+  asSource LotRelation[] @relation("SourceLot")
+  asTarget LotRelation[] @relation("TargetLot")
 
   // Process event participation
   processInputs  ProcessEventInput[]
   processOutputs ProcessEventOutput[]
 
-  events         LotEvent[]
-  auditLogs      AuditLog[]
-  inspections    Inspection[]
-  evidences      Evidence[]
-  packages       Package[]
-  shipmentLines  ShipmentLine[]
-  complaints     Complaint[]
+  events        LotEvent[]
+  auditLogs     AuditLog[]
+  inspections   Inspection[]
+  evidences     Evidence[]
+  packages      Package[]
+  shipmentLines ShipmentLine[]
+  complaints    Complaint[]
 
+  @@unique([organizationId, batchNumber])
   @@unique([organizationId, lotCode])
   @@index([organizationId, status])
   @@index([organizationId, lotType])
@@ -299,19 +360,19 @@ model Lot {
 /// Many-to-many: one source can contribute to many targets; one target can have many sources.
 /// NEVER replace with a single parent_id — that cannot represent Mix (many→1) or Split (1→many).
 model LotRelation {
-  id           String       @id @default(uuid())
-  organizationId String     // Denormalized for fast tenant-scoped queries
-  sourceLotId  String       // The lot that was CONSUMED / INPUT
-  targetLotId  String       // The lot that was PRODUCED / OUTPUT
-  relationType RelationType
-  quantity     Decimal      @db.Decimal(12, 3)
-  unit         String
-  eventId      String?      // ProcessEvent that created this relation
-  createdAt    DateTime     @default(now())
+  id             String       @id @default(uuid())
+  organizationId String // Denormalized for fast tenant-scoped queries
+  sourceLotId    String // The lot that was CONSUMED / INPUT
+  targetLotId    String // The lot that was PRODUCED / OUTPUT
+  relationType   RelationType
+  quantity       Decimal      @db.Decimal(12, 3)
+  unit           String
+  eventId        String? // ProcessEvent that created this relation
+  createdAt      DateTime     @default(now())
 
-  sourceLot    Lot          @relation("SourceLot", fields: [sourceLotId], references: [id])
-  targetLot    Lot          @relation("TargetLot", fields: [targetLotId], references: [id])
-  event        ProcessEvent? @relation(fields: [eventId], references: [id])
+  sourceLot Lot           @relation("SourceLot", fields: [sourceLotId], references: [id])
+  targetLot Lot           @relation("TargetLot", fields: [targetLotId], references: [id])
+  event     ProcessEvent? @relation(fields: [eventId], references: [id])
 
   @@unique([sourceLotId, targetLotId, relationType])
   @@index([organizationId, sourceLotId])
@@ -324,34 +385,34 @@ model LotRelation {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model ProcessEvent {
-  id                 String             @id @default(uuid())
-  organizationId     String
-  eventCode          String             // Human-readable: PE-2024-001
-  eventType          ProcessEventType
-  customEventName    String?            // Used when eventType = CUSTOM
-  siteId             String?
-  locationId         String?
-  startAt            DateTime
-  endAt              DateTime?
-  createdById        String?
-  notes              String?
-  evidenceUrls       Json?              // String[]
-  massBalanceStatus  MassBalanceStatus  @default(BALANCED)
-  massBalanceDiff    Decimal?           @db.Decimal(12, 3)  // input - (output+waste+remaining)
-  massBalanceNote    String?            // Required explanation if WARNING/BLOCKED
-  deletedAt          DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                String            @id @default(uuid())
+  organizationId    String
+  eventCode         String // Human-readable: PE-2024-001
+  eventType         ProcessEventType
+  customEventName   String? // Used when eventType = CUSTOM
+  siteId            String?
+  locationId        String?
+  startAt           DateTime
+  endAt             DateTime?
+  createdById       String?
+  notes             String?
+  evidenceUrls      Json? // String[]
+  massBalanceStatus MassBalanceStatus @default(BALANCED)
+  massBalanceDiff   Decimal?          @db.Decimal(12, 3) // input - (output+waste+remaining)
+  massBalanceNote   String? // Required explanation if WARNING/BLOCKED
+  deletedAt         DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  organization  Organization         @relation(fields: [organizationId], references: [id])
-  site          Site?                @relation(fields: [siteId], references: [id])
-  location      Location?            @relation(fields: [locationId], references: [id])
-  createdBy     User?                @relation("ProcessEventCreatedBy", fields: [createdById], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  site         Site?        @relation(fields: [siteId], references: [id])
+  location     Location?    @relation(fields: [locationId], references: [id])
+  createdBy    User?        @relation("ProcessEventCreatedBy", fields: [createdById], references: [id])
 
-  inputs        ProcessEventInput[]
-  outputs       ProcessEventOutput[]
-  lotRelations  LotRelation[]        // Relations created by this event
-  evidences     Evidence[]
+  inputs       ProcessEventInput[]
+  outputs      ProcessEventOutput[]
+  lotRelations LotRelation[] // Relations created by this event
+  evidences    Evidence[]
 
   @@unique([organizationId, eventCode])
   @@index([organizationId, eventType])
@@ -361,30 +422,30 @@ model ProcessEvent {
 
 /// Each input lot consumed by a process event.
 model ProcessEventInput {
-  id        String       @id @default(uuid())
-  eventId   String
-  lotId     String
-  quantity  Decimal      @db.Decimal(12, 3)
-  unit      String
+  id       String  @id @default(uuid())
+  eventId  String
+  lotId    String
+  quantity Decimal @db.Decimal(12, 3)
+  unit     String
 
-  event     ProcessEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  lot       Lot          @relation(fields: [lotId], references: [id])
+  event ProcessEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  lot   Lot          @relation(fields: [lotId], references: [id])
 
   @@unique([eventId, lotId])
 }
 
 /// Each output lot produced by a process event, with waste and remaining.
 model ProcessEventOutput {
-  id          String       @id @default(uuid())
-  eventId     String
-  lotId       String
-  quantity    Decimal      @db.Decimal(12, 3)
-  unit        String
-  waste       Decimal      @db.Decimal(12, 3) @default(0)
-  remaining   Decimal      @db.Decimal(12, 3) @default(0)
+  id        String  @id @default(uuid())
+  eventId   String
+  lotId     String
+  quantity  Decimal @db.Decimal(12, 3)
+  unit      String
+  waste     Decimal @default(0) @db.Decimal(12, 3)
+  remaining Decimal @default(0) @db.Decimal(12, 3)
 
-  event       ProcessEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  lot         Lot          @relation(fields: [lotId], references: [id])
+  event ProcessEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  lot   Lot          @relation(fields: [lotId], references: [id])
 
   @@unique([eventId, lotId])
 }
@@ -394,16 +455,16 @@ model ProcessEventOutput {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model LotEvent {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   lotId      String
   actorId    String?
-  eventType  String    // STATUS_CHANGED | LOT_CREATED | LOT_UPDATED | EVIDENCE_ADDED …
+  eventType  String // STATUS_CHANGED | LOT_CREATED | LOT_UPDATED | EVIDENCE_ADDED …
   payload    Json?
   note       String?
-  occurredAt DateTime  @default(now())
+  occurredAt DateTime @default(now())
 
-  lot        Lot       @relation(fields: [lotId], references: [id])
-  actor      User?     @relation("LotEventActor", fields: [actorId], references: [id])
+  lot   Lot   @relation(fields: [lotId], references: [id])
+  actor User? @relation("LotEventActor", fields: [actorId], references: [id])
 
   @@index([lotId, occurredAt])
 }
@@ -413,7 +474,7 @@ model LotEvent {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model AuditLog {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   actorId        String?
   action         String
@@ -423,11 +484,11 @@ model AuditLog {
   oldValue       Json?
   newValue       Json?
   reason         String?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime @default(now())
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  actor          User?        @relation("UserAuditLogs", fields: [actorId], references: [id])
-  lot            Lot?         @relation(fields: [lotId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  actor        User?        @relation("UserAuditLogs", fields: [actorId], references: [id])
+  lot          Lot?         @relation(fields: [lotId], references: [id])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -435,19 +496,19 @@ model AuditLog {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Inspection {
-  id                      String        @id @default(uuid())
-  organizationId          String
-  lotId                   String
-  sampleId                String?
-  testMethod              String
-  date                    DateTime      @default(now())
-  result                  String
-  specificationReference  String?
-  inspectorId             String?
-  notes                   String?
-  status                  QualityStatus @default(PENDING)
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
+  id                     String        @id @default(uuid())
+  organizationId         String
+  lotId                  String
+  sampleId               String?
+  testMethod             String
+  date                   DateTime      @default(now())
+  result                 String
+  specificationReference String?
+  inspectorId            String?
+  notes                  String?
+  status                 QualityStatus @default(PENDING)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
   lot          Lot          @relation(fields: [lotId], references: [id], onDelete: Cascade)
@@ -462,23 +523,23 @@ model Evidence {
   id             String          @id @default(uuid())
   organizationId String
   fileName       String
-  documentUrl    String          // The actual S3/storage path
-  documentType   String          // PDF, JPG, PNG, CSV
+  documentUrl    String // The actual S3/storage path
+  documentType   String // PDF, JPG, PNG, CSV
   visibility     VisibilityLevel @default(INTERNAL)
   uploadedById   String?
-  
+
   // Linked objects
   lotId          String?
   processEventId String?
   inspectionId   String?
-  
-  createdAt      DateTime        @default(now())
 
-  organization   Organization  @relation(fields: [organizationId], references: [id])
-  uploadedBy     User?         @relation("EvidenceUploader", fields: [uploadedById], references: [id])
-  lot            Lot?          @relation(fields: [lotId], references: [id])
-  processEvent   ProcessEvent? @relation(fields: [processEventId], references: [id])
-  inspection     Inspection?   @relation(fields: [inspectionId], references: [id])
+  createdAt DateTime @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  uploadedBy   User?         @relation("EvidenceUploader", fields: [uploadedById], references: [id])
+  lot          Lot?          @relation(fields: [lotId], references: [id])
+  processEvent ProcessEvent? @relation(fields: [processEventId], references: [id])
+  inspection   Inspection?   @relation(fields: [inspectionId], references: [id])
 
   @@index([organizationId, visibility])
   @@index([lotId])
@@ -525,31 +586,41 @@ model Package {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  organization   Organization  @relation(fields: [organizationId], references: [id])
-  lot            Lot           @relation(fields: [lotId], references: [id])
-  qrSerials      QrSerial[]
-  complaints     Complaint[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  lot          Lot          @relation(fields: [lotId], references: [id])
+  qrSerials    QrSerial[]
+  complaints   Complaint[]
 
   @@unique([organizationId, packageCode])
   @@index([lotId])
 }
 
 model QrSerial {
-  id             String          @id @default(uuid())
-  serial         String          @unique // Truly global unique identifier
-  packageId      String
-  status         QrStatus        @default(GENERATED)
-  anomalyStatus  QrAnomalyStatus @default(NORMAL)
-  
-  activatedAt    DateTime?
-  activatedById  String?
-  replacementOf  String?         // ID of the old QrSerial if replaced
+  id            String          @id @default(uuid())
+  serial        String          @unique // Truly global unique identifier
+  packageId     String
+  status        QrStatus        @default(GENERATED)
+  anomalyStatus QrAnomalyStatus @default(NORMAL)
 
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime      @updatedAt
+  activatedAt   DateTime?
+  activatedById String?
+  replacementOf String? // ID of the old QrSerial if replaced
 
-  package        Package         @relation(fields: [packageId], references: [id])
-  activatedBy    User?           @relation("QrActivatedBy", fields: [activatedById], references: [id])
+  // Public access: unguessable token (Crockford base32) is separate from the readable serial.
+  token       String?     @unique
+  humanSerial String?     @unique // e.g. SGU-B24-0912-07-0001
+  boxId       String?
+  scanCount   Int         @default(0)
+  firstScanAt DateTime?
+  lastScanAt  DateTime?
+  box         Box?        @relation(fields: [boxId], references: [id])
+  scanEvents  ScanEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  package     Package @relation(fields: [packageId], references: [id])
+  activatedBy User?   @relation("QrActivatedBy", fields: [activatedById], references: [id])
 
   @@index([packageId])
   @@index([status])
@@ -567,36 +638,42 @@ enum ShipmentStatus {
 }
 
 model Shipment {
-  id                String         @id @default(uuid())
-  organizationId    String
-  shipmentCode      String
-  buyerId           String
-  shipmentDate      DateTime
-  status            ShipmentStatus @default(PLANNED)
-  proofOfDelivery   String?        // Link to evidence document
-  createdById       String?
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  id              String         @id @default(uuid())
+  organizationId  String
+  shipmentCode    String
+  buyerId         String
+  shipmentDate    DateTime
+  status          ShipmentStatus @default(PLANNED)
+  proofOfDelivery String? // Link to evidence document
+  distributorName String?
+  receivedAt      DateTime?
+  receivedByName  String?
+  legs            ShipmentLeg[]
+  boxes           Box[]
+  shareLinks      ShareLink[]
+  createdById     String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
-  organization      Organization   @relation(fields: [organizationId], references: [id])
-  buyer             Buyer          @relation(fields: [buyerId], references: [id])
-  createdBy         User?          @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
-  lines             ShipmentLine[]
+  organization Organization   @relation(fields: [organizationId], references: [id])
+  buyer        Buyer          @relation(fields: [buyerId], references: [id])
+  createdBy    User?          @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
+  lines        ShipmentLine[]
 
   @@unique([organizationId, shipmentCode])
   @@index([buyerId])
 }
 
 model ShipmentLine {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   shipmentId   String
   lotId        String
   packageCount Int?
-  quantity     Decimal  @db.Decimal(12, 3)
+  quantity     Decimal @db.Decimal(12, 3)
   unit         String
 
-  shipment     Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
-  lot          Lot      @relation(fields: [lotId], references: [id])
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  lot      Lot      @relation(fields: [lotId], references: [id])
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -612,27 +689,27 @@ enum ComplaintStatus {
 }
 
 model Complaint {
-  id                 String          @id @default(uuid())
-  organizationId     String
-  caseCode           String
-  reportedBy         String
-  relatedLotId       String?
-  relatedPackageId   String?
-  reason             String
-  description        String
-  status             ComplaintStatus @default(OPEN)
-  responsibleUserId  String?
-  closedAt           DateTime?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  
-  // Stores the generated impact scope as a JSON snapshot (§24.2, §81)
-  impactScope        Json?           
+  id                String          @id @default(uuid())
+  organizationId    String
+  caseCode          String
+  reportedBy        String
+  relatedLotId      String?
+  relatedPackageId  String?
+  reason            String
+  description       String
+  status            ComplaintStatus @default(OPEN)
+  responsibleUserId String?
+  closedAt          DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
-  organization       Organization    @relation(fields: [organizationId], references: [id])
-  relatedLot         Lot?            @relation(fields: [relatedLotId], references: [id])
-  relatedPackage     Package?        @relation(fields: [relatedPackageId], references: [id])
-  responsibleUser    User?           @relation("ComplaintResponsibleUser", fields: [responsibleUserId], references: [id])
+  // Stores the generated impact scope as a JSON snapshot (§24.2, §81)
+  impactScope Json?
+
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  relatedLot      Lot?         @relation(fields: [relatedLotId], references: [id])
+  relatedPackage  Package?     @relation(fields: [relatedPackageId], references: [id])
+  responsibleUser User?        @relation("ComplaintResponsibleUser", fields: [responsibleUserId], references: [id])
 
   @@unique([organizationId, caseCode])
   @@index([organizationId, status])
@@ -659,38 +736,38 @@ enum ReadingQuality {
 }
 
 model Gateway {
-  id             String       @id @default(uuid())
+  id             String   @id @default(uuid())
   organizationId String
   deviceCode     String
   siteId         String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  site           Site         @relation(fields: [siteId], references: [id])
-  sensors        Sensor[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  site         Site         @relation(fields: [siteId], references: [id])
+  sensors      Sensor[]
 
   @@unique([organizationId, deviceCode])
 }
 
 model Sensor {
-  id                 String       @id @default(uuid())
+  id                 String      @id @default(uuid())
   organizationId     String
   deviceCode         String
   model              String?
   siteId             String?
   locationId         String?
   gatewayId          String?
-  status             SensorState  @default(UNVERIFIED)
+  status             SensorState @default(UNVERIFIED)
   lastSeenAt         DateTime?
-  verificationStatus String?      // For MVP: Verified/Unverified text
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  verificationStatus String? // For MVP: Verified/Unverified text
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  site         Site?        @relation(fields: [siteId], references: [id])
-  location     Location?    @relation(fields: [locationId], references: [id])
-  gateway      Gateway?     @relation(fields: [gatewayId], references: [id])
+  organization Organization    @relation(fields: [organizationId], references: [id])
+  site         Site?           @relation(fields: [siteId], references: [id])
+  location     Location?       @relation(fields: [locationId], references: [id])
+  gateway      Gateway?        @relation(fields: [gatewayId], references: [id])
   readings     SensorReading[]
 
   @@unique([organizationId, deviceCode])
@@ -705,7 +782,7 @@ model SensorReading {
   relativeHumidity Decimal?       @db.Decimal(5, 2)
   dataQuality      ReadingQuality @default(NORMAL)
 
-  sensor           Sensor         @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
 
   // Critical index for time-series extraction
   @@index([sensorId, timestamp])
@@ -726,22 +803,216 @@ model ExportJob {
   id             String          @id @default(uuid())
   organizationId String
   requestedById  String
-  reportType     String          // TRACEABILITY | MASS_BALANCE | COMPLAINT | ENVIRONMENTAL
-  filters        Json            // Store applied filters
-  format         String          // CSV | PDF
+  reportType     String // TRACEABILITY | MASS_BALANCE | COMPLAINT | ENVIRONMENTAL
+  filters        Json // Store applied filters
+  format         String // CSV | PDF
   status         ExportJobStatus @default(PENDING)
-  fileUrl        String?         // URL once generated
+  fileUrl        String? // URL once generated
   errorMessage   String?
   createdAt      DateTime        @default(now())
   completedAt    DateTime?
 
-  organization   Organization    @relation(fields: [organizationId], references: [id])
-  requestedBy    User            @relation("ExportJobRequestedBy", fields: [requestedById], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  requestedBy  User         @relation("ExportJobRequestedBy", fields: [requestedById], references: [id])
 
   @@index([organizationId, status])
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Go-live models (WS1–WS5)
+// ─────────────────────────────────────────────────────────────────────────────
 
+/// Single source of truth for Halal / Organic / BPOM certificates (Certificates Vault).
+/// Status (ACTIVE / EXPIRING / EXPIRED) is computed from validUntil, never stored.
+model Certificate {
+  id             String          @id @default(uuid())
+  organizationId String
+  type           CertificateType
+  name           String
+  number         String
+  issuer         String?
+  validUntil     DateTime
+  verifyUrl      String?
+  fileUrl        String?
+  isDemo         Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
+  organization Organization @relation(fields: [organizationId], references: [id])
+  lots         Lot[]
 
+  @@index([organizationId, type])
+}
 
+/// Atomic per-day counter for batch numbers B{YY}-{MMDD}-{NN} (Asia/Jakarta day).
+model BatchSequence {
+  organizationId String
+  day            String // YYYYMMDD
+  last           Int    @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@id([organizationId, day])
+}
+
+model ShipmentLeg {
+  id         String    @id @default(uuid())
+  shipmentId String
+  seq        Int
+  fromName   String
+  toName     String
+  departAt   DateTime?
+  arriveAt   DateTime?
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([shipmentId, seq])
+}
+
+/// Physical shipping box. One logger per box. QR on the box → /s/{token}.
+model Box {
+  id             String    @id @default(uuid())
+  organizationId String
+  shipmentId     String
+  boxCode        String
+  token          String    @unique
+  deviceId       String?
+  loggerStartAt  DateTime? // chain of custody: logger bound to box
+  loggerEndAt    DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  shipment     Shipment      @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  device       IotDevice?    @relation(fields: [deviceId], references: [id])
+  units        QrSerial[]
+  readings     TempReading[]
+  summary      TempSummary?
+  alerts       Alert[]
+  scanEvents   ScanEvent[]
+
+  @@unique([organizationId, boxCode])
+  @@index([shipmentId])
+}
+
+model ShareLink {
+  id             String    @id @default(uuid())
+  organizationId String
+  shipmentId     String
+  buyerId        String?
+  token          String    @unique
+  expiresAt      DateTime
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  shipment     Shipment     @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId])
+}
+
+/// Anonymous scan log. No raw IP: ipHash = sha256(ip + daily salt). City-level geo at most.
+model ScanEvent {
+  id         String   @id @default(uuid())
+  qrSerialId String?
+  boxId      String?
+  kind       String // LOT | SHIPMENT
+  ipHash     String
+  city       String?
+  createdAt  DateTime @default(now())
+
+  qrSerial QrSerial? @relation(fields: [qrSerialId], references: [id], onDelete: Cascade)
+  box      Box?      @relation(fields: [boxId], references: [id], onDelete: Cascade)
+
+  @@index([qrSerialId, createdAt])
+  @@index([boxId, createdAt])
+  @@index([createdAt])
+}
+
+model IotDevice {
+  id             String    @id @default(uuid())
+  organizationId String
+  deviceCode     String
+  tokenHash      String    @unique
+  battery        Int?
+  lastSeenAt     DateTime?
+  isDemo         Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  boxes        Box[]
+  readings     TempReading[]
+
+  @@unique([organizationId, deviceCode])
+}
+
+model TempReading {
+  id       String   @id @default(uuid())
+  deviceId String
+  boxId    String?
+  ts       DateTime
+  tempC    Decimal  @db.Decimal(5, 2)
+  rhPct    Decimal? @db.Decimal(5, 2)
+  battery  Int?
+
+  device IotDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  box    Box?      @relation(fields: [boxId], references: [id], onDelete: SetNull)
+
+  @@unique([deviceId, ts]) // idempotent ingest
+  @@index([boxId, ts])
+}
+
+/// Cached rollup, recomputed on ingest and on shipment completion.
+model TempSummary {
+  boxId            String     @id
+  status           TempStatus @default(NO_DATA)
+  count            Int        @default(0)
+  minC             Decimal?   @db.Decimal(5, 2)
+  avgC             Decimal?   @db.Decimal(5, 2)
+  maxC             Decimal?   @db.Decimal(5, 2)
+  warningCount     Int        @default(0)
+  deviationCount   Int        @default(0)
+  deviationMinutes Int        @default(0)
+  belowRangeCount  Int        @default(0)
+  maxRhPct         Decimal?   @db.Decimal(5, 2)
+  rhExceedCount    Int        @default(0)
+  firstTs          DateTime?
+  lastTs           DateTime?
+  computedAt       DateTime   @default(now())
+
+  box Box @relation(fields: [boxId], references: [id], onDelete: Cascade)
+}
+
+model Alert {
+  id             String      @id @default(uuid())
+  organizationId String
+  type           String // TEMP_DEVIATION | RH_EXCEEDED | LOGGER_OFFLINE | LOW_BATTERY | SCAN_ANOMALY
+  severity       String // INFO | WARNING | CRITICAL
+  message        String
+  boxId          String?
+  lotId          String?
+  status         AlertStatus @default(OPEN)
+  dedupeKey      String?
+  createdAt      DateTime    @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  box          Box?         @relation(fields: [boxId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, dedupeKey])
+  @@index([organizationId, status])
+}
+
+/// Server-side PDF snapshot proof: hash of content at generation time.
+model PdfSnapshot {
+  id             String   @id @default(uuid())
+  organizationId String
+  docId          String   @unique
+  kind           String // LOT | SHIPMENT
+  refId          String
+  version        Int
+  sha256         String
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([kind, refId])
+}

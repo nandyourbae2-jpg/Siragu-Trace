@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIRAGU Trace — Paspor Ketertelusuran Offline</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f8fafc; color: #0f172a; padding-bottom: 60px; }
+    .container { max-width: 480px; margin: 0 auto; background: #fff; min-height: 100vh; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
+    .banner { background: linear-gradient(135deg, #1B4D3E, #0D2921); color: #fff; padding: 40px 24px 70px; border-bottom-left-radius: 36px; border-bottom-right-radius: 36px; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: rgba(16,185,129,0.2); color: #6ee7b7; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px; }
+    h1 { font-size: 24px; font-weight: 900; line-height: 1.2; }
+    .subtitle { color: #a7f3d0; font-size: 13px; margin-top: 4px; }
+    .card { background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #f1f5f9; margin: -40px 20px 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; margin-top: 12px; }
+    .stat { background: #f8fafc; padding: 10px 6px; border-radius: 12px; }
+    .stat-lbl { font-size: 10px; font-weight: bold; color: #94a3b8; text-transform: uppercase; display: block; }
+    .stat-val { font-size: 13px; font-weight: 800; color: #1e293b; margin-top: 2px; }
+    .section { background: #fff; border-radius: 16px; padding: 18px; margin: 0 20px 16px; border: 1px solid #f1f5f9; }
+    .sec-title { font-size: 13px; font-weight: 900; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f8fafc; font-size: 12px; }
+    .pass { color: #059669; font-weight: bold; }
+    .farmer-item { display: flex; align-items: center; gap: 12px; padding: 10px; background: #f8fafc; border-radius: 12px; margin-bottom: 8px; font-size: 12px; }
+    .footer { text-align: center; font-size: 11px; color: #94a3b8; padding: 24px 20px; }
+    .offline-tag { background: #e0e7ff; color: #3730a3; padding: 6px 12px; text-align: center; font-size: 11px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="offline-tag">MODE PRESENTASI OFFLINE (BACKUP TANPA INTERNET)</div>
+    
+    <div class="banner">
+      <div class="badge">Terverifikasi Standar SNI & Organik</div>
+      <h1>Gula Semut Kelapa Organik</h1>
+      <p class="subtitle">Sentra Somagede Banyumas • Single-Origin</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+        <div>
+          <span style="font-size:10px; font-weight:bold; color:#94a3b8; text-transform:uppercase;">Nomor Batch</span>
+          <p style="font-family:monospace; font-weight:bold; font-size:15px; color:#0f172a;">B26-0912-07</p>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:10px; font-weight:bold; color:#94a3b8; text-transform:uppercase;">Serial Unit</span>
+          <p style="font-family:monospace; font-size:12px; color:#475569;">SGU-B26-0912-07-0001</p>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="stat"><span class="stat-lbl">Netto</span><span class="stat-val">250g</span></div>
+        <div class="stat"><span class="stat-lbl">Dikemas</span><span class="stat-val">14/09/2026</span></div>
+        <div class="stat"><span class="stat-lbl">Kedaluwarsa</span><span class="stat-val" style="color:#059669;">14/09/2028</span></div>
+      </div>
+    </div>
+
+    <!-- Parameter SNI -->
+    <div class="section">
+      <div class="sec-title">
+        <span>Hasil Uji Mutu SNI 3743:2021</span>
+        <span style="background:#d1fae5; color:#065f46; font-size:10px; padding:2px 8px; border-radius:9999px;">LULUS MUTU I</span>
+      </div>
+      <div class="row">
+        <span>Kadar Air (Maks 3.0%)</span>
+        <span class="pass">1.82%</span>
+      </div>
+      <div class="row">
+        <span>Bagian Tak Larut (Maks 0.2%)</span>
+        <span class="pass">0.12%</span>
+      </div>
+      <div class="row">
+        <span>Keseragaman Butir (Mesh 16 &ge; 95%)</span>
+        <span class="pass">98.5% Lolos</span>
+      </div>
+    </div>
+
+    <!-- Petani Penderes -->
+    <div class="section">
+      <div class="sec-title"><span>Asal-Usul Petani Penderes</span></div>
+      <div class="farmer-item">
+        <div>
+          <strong>Pak Slamet Riyadi (Kelompok Nira Murni)</strong>
+          <div style="color:#64748b; font-size:11px;">Desa Somagede, Banyumas • Sertifikasi Organik Aktif</div>
+        </div>
+      </div>
+      <div class="farmer-item">
+        <div>
+          <strong>Pak Sutrisno (Kelompok Makmur Berkah)</strong>
+          <div style="color:#64748b; font-size:11px;">Desa Kemawi, Banyumas • Sertifikasi Organik Aktif</div>
+        </div>
+      </div>
+      <div class="farmer-item">
+        <div>
+          <strong>Ibu Warsinah (Kelompok Srikandi Nira)</strong>
+          <div style="color:#64748b; font-size:11px;">Desa Tanggeran, Banyumas • Sertifikasi Organik Aktif</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sertifikasi -->
+    <div class="section">
+      <div class="sec-title"><span>Legalitas & Sertifikasi</span></div>
+      <div class="row">
+        <span>BPOM RI MD</span>
+        <strong>MD 252111001234</strong>
+      </div>
+      <div class="row">
+        <span>Halal BPJPH Kemenag</span>
+        <strong>ID33110001892830224</strong>
+      </div>
+      <div class="row">
+        <span>EU Organic Standar</span>
+        <strong>CU-892182-EU</strong>
+      </div>
+      <div class="row">
+        <span>SNI Organik 6729</span>
+        <strong>LS-012-SNI-ORG-882</strong>
+      </div>
+    </div>
+
+    <!-- Cold chain -->
+    <div class="section">
+      <div class="sec-title"><span>Telemetri Logistik Dingin (IoT)</span><span class="pass">STATUS: OK</span></div>
+      <div class="row"><span>Suhu Rata-rata</span><strong>23.4°C (Aman 20-26°C)</strong></div>
+      <div class="row"><span>Deviasi Suhu (&gt;27°C)</span><strong class="pass">0 Menit (Nol Deviasi)</strong></div>
+      <div class="row"><span>Kelembaban Maks (RH)</span><strong>58.2% (&lt; 65% Anti-Caking)</strong></div>
+    </div>
+
+    <div class="footer">
+      <p><strong>SIRAGU Trace Engine v2.0</strong></p>
+      <p>Platform Ketertelusuran Rantai Pasok Gula Semut Organik</p>
+      <p style="margin-top:6px; color:#cbd5e1;">Digest SHA-256: 7f8a912b34cd56ef0123456789abcdef</p>
+    </div>
+  </div>
+</body>
+</html>

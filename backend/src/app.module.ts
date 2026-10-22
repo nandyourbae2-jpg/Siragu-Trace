@@ -15,13 +15,17 @@ import { PackagingModule } from './packaging/packaging.module.js';
 import { DistributionModule } from './distribution/distribution.module.js';
 import { IotModule } from './iot/iot.module.js';
 import { ReportsModule } from './reports/reports.module.js';
+import { CertificatesModule } from './certificates/certificates.module.js';
+import { PublicModule } from './public/public.module.js';
 import { TenantScopeInterceptor } from './auth/tenant-scope.interceptor.js';
+import { CommonModule } from './common/common.module.js';
 
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    CommonModule,
     AuthModule,
     LotsModule,
     ProcessEventsModule,
@@ -33,6 +37,8 @@ import { TenantScopeInterceptor } from './auth/tenant-scope.interceptor.js';
     DistributionModule,
     IotModule,
     ReportsModule,
+    CertificatesModule,
+    PublicModule,
   ],
   controllers: [AppController],
   providers: [
