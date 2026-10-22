@@ -35,6 +35,8 @@ export function QrCardItem({ item }: { item: QrItemProps }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(true);
+  const [downloadingBadge, setDownloadingBadge] = useState(false);
+  const [downloadingPure, setDownloadingPure] = useState(false);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(item.url);
@@ -42,11 +44,21 @@ export function QrCardItem({ item }: { item: QrItemProps }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownloadPureQr = () => {
-    downloadQrCodePng(canvasRef.current, `SIRAGU_${item.id}_QR`);
+  const getCanvas = (): HTMLCanvasElement | null => {
+    if (canvasRef.current) return canvasRef.current;
+    return document.getElementById(`qr-canvas-${item.id}`) as HTMLCanvasElement | null;
   };
 
-  const handleDownloadPrintableLabel = () => {
+  const handleDownloadPureQr = async () => {
+    setDownloadingPure(true);
+    const canvas = getCanvas();
+    await downloadQrCodePng(canvas, `SIRAGU_${item.id}_QR`);
+    setTimeout(() => setDownloadingPure(false), 1500);
+  };
+
+  const handleDownloadPrintableLabel = async () => {
+    setDownloadingBadge(true);
+    const canvas = getCanvas();
     const badgeOptions: QrBadgeOptions = {
       url: item.url,
       codeTitle: item.code,
@@ -55,7 +67,8 @@ export function QrCardItem({ item }: { item: QrItemProps }) {
       metadata: item.printableMeta,
       filename: `SIRAGU_${item.id}`,
     };
-    downloadPrintableLabelPng(canvasRef.current, badgeOptions);
+    await downloadPrintableLabelPng(canvas, badgeOptions);
+    setTimeout(() => setDownloadingBadge(false), 1500);
   };
 
   const getHeaderIcon = () => {
@@ -107,6 +120,7 @@ export function QrCardItem({ item }: { item: QrItemProps }) {
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex-shrink-0 text-center">
           <QRCodeCanvas
             ref={canvasRef}
+            id={`qr-canvas-${item.id}`}
             value={item.url}
             size={168}
             level="M"
@@ -121,20 +135,22 @@ export function QrCardItem({ item }: { item: QrItemProps }) {
         <div className="flex-1 w-full space-y-2.5">
           <button
             onClick={handleDownloadPrintableLabel}
-            className="w-full py-2.5 px-4 bg-[#1B4D3E] hover:bg-[#143B30] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+            disabled={downloadingBadge}
+            className="w-full py-2.5 px-4 bg-[#1B4D3E] hover:bg-[#143B30] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-75"
             title="Download stiker siap cetak lengkap dengan logo, bingkai, dan data batch"
           >
-            <Tag size={15} />
-            Unduh Label Siap Cetak (Stiker Badge)
+            {downloadingBadge ? <Check size={15} className="text-emerald-300" /> : <Tag size={15} />}
+            {downloadingBadge ? '✓ Berhasil Diunduh!' : 'Unduh Label Siap Cetak (Stiker Badge)'}
           </button>
 
           <button
             onClick={handleDownloadPureQr}
-            className="w-full py-2.5 px-4 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            disabled={downloadingPure}
+            className="w-full py-2.5 px-4 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-75"
             title="Download QR code PNG beresolusi tinggi (800x800)"
           >
-            <Download size={15} className="text-emerald-600" />
-            Unduh QR Saja (PNG High-Res)
+            {downloadingPure ? <Check size={15} className="text-emerald-600" /> : <Download size={15} className="text-emerald-600" />}
+            {downloadingPure ? '✓ Berhasil Diunduh!' : 'Unduh QR Saja (PNG High-Res)'}
           </button>
 
           <div className="grid grid-cols-2 gap-2 pt-1">

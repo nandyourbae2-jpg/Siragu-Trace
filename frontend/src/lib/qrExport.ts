@@ -11,11 +11,54 @@ export interface QrBadgeOptions {
   filename: string;
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 1500);
+}
+
+function triggerDownloadFromCanvas(canvas: HTMLCanvasElement, filename: string) {
+  if (typeof canvas.toBlob === 'function') {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        downloadBlob(blob, filename);
+      } else {
+        const dataUrl = canvas.toDataURL('image/png');
+        triggerDataUrlDownload(dataUrl, filename);
+      }
+    }, 'image/png');
+  } else {
+    const dataUrl = canvas.toDataURL('image/png');
+    triggerDataUrlDownload(dataUrl, filename);
+  }
+}
+
+function triggerDataUrlDownload(dataUrl: string, filename: string) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+  }, 1000);
+}
+
 /**
  * Download a pure high-resolution QR code PNG (800x800).
  */
 export async function downloadQrCodePng(canvasElement: HTMLCanvasElement | null, filename: string) {
-  if (!canvasElement) return;
+  if (!canvasElement) {
+    console.warn('[SIRAGU QR] Canvas element tidak ditemukan untuk unduh QR murni.');
+    return;
+  }
 
   // Create a high-res 800x800 canvas
   const highResCanvas = document.createElement('canvas');
@@ -32,8 +75,7 @@ export async function downloadQrCodePng(canvasElement: HTMLCanvasElement | null,
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(canvasElement, 60, 60, 680, 680);
 
-  const dataUrl = highResCanvas.toDataURL('image/png');
-  triggerDownload(dataUrl, `${filename}.png`);
+  triggerDownloadFromCanvas(highResCanvas, `${filename}.png`);
 }
 
 /**
@@ -44,7 +86,10 @@ export async function downloadPrintableLabelPng(
   canvasElement: HTMLCanvasElement | null,
   options: QrBadgeOptions,
 ) {
-  if (!canvasElement) return;
+  if (!canvasElement) {
+    console.warn('[SIRAGU QR] Canvas element tidak ditemukan untuk unduh stiker badge.');
+    return;
+  }
 
   const width = 640;
   const height = 860;
@@ -153,15 +198,5 @@ export async function downloadPrintableLabelPng(
   ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   ctx.fillText('SNI 3743:2021 • EU ORGANIC CU-892182 • BPOM MD • HALAL BPJPH', width / 2, 825);
 
-  const dataUrl = canvas.toDataURL('image/png');
-  triggerDownload(dataUrl, `${options.filename}_LABEL_SIAP_CETAK.png`);
-}
-
-function triggerDownload(dataUrl: string, filename: string) {
-  const a = document.createElement('a');
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  triggerDownloadFromCanvas(canvas, `${options.filename}_LABEL_SIAP_CETAK.png`);
 }

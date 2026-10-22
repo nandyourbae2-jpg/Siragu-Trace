@@ -33,6 +33,13 @@ export const LandingPage = () => {
     }, 1000);
   };
 
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 overflow-x-hidden">
       
@@ -47,15 +54,25 @@ export const LandingPage = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <a href="#fitur" className="hover:text-blue-600 transition-colors">Fitur Unggulan</a>
-            <a href="#cara-kerja" className="hover:text-blue-600 transition-colors">Cara Kerja</a>
-            <a href="#harga" className="hover:text-blue-600 transition-colors">Paket Pilot</a>
-            <a href="#qr-kit" className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1">
+            <button type="button" onClick={() => scrollTo('fitur')} className="hover:text-blue-600 transition-colors cursor-pointer bg-transparent border-0 p-0 text-sm font-medium">Fitur Unggulan</button>
+            <button type="button" onClick={() => scrollTo('cara-kerja')} className="hover:text-blue-600 transition-colors cursor-pointer bg-transparent border-0 p-0 text-sm font-medium">Cara Kerja</button>
+            <button type="button" onClick={() => scrollTo('harga')} className="hover:text-blue-600 transition-colors cursor-pointer bg-transparent border-0 p-0 text-sm font-medium">Paket Pilot</button>
+            <button 
+              type="button"
+              onClick={() => navigate('/qr-kit')} 
+              className="text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0 text-sm"
+              title="Buka Pusat Unduh QR Code & Stiker"
+            >
               <Download size={14} /> Download QR Kit
-            </a>
-            <a href="/verify/PKG-2026-0001" className="text-blue-700 hover:text-blue-800 font-semibold flex items-center gap-1">
+            </button>
+            <button 
+              type="button"
+              onClick={() => navigate('/v/DEMOPASSPORT')} 
+              className="text-blue-700 hover:text-blue-800 font-semibold flex items-center gap-1 cursor-pointer bg-transparent border-0 p-0 text-sm"
+              title="Coba simulasi scan QR paspor konsumen"
+            >
               <Sparkles size={14} /> Coba Scan QR
-            </a>
+            </button>
           </div>
 
           <div className="flex items-center gap-3">
@@ -90,19 +107,21 @@ export const LandingPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button 
-              onClick={() => navigate('/login')} 
+              onClick={() => navigate('/app/dashboard')} 
               className="w-full sm:w-auto bg-[#0075DE] hover:bg-blue-500 text-white px-8 py-3.5 rounded-full text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+              title="Masuk langsung ke aplikasi demo dengan 11 modul aktif"
             >
               Coba Aplikasi Sekarang <ArrowRight size={18} />
             </button>
-            <a 
-              href="#qr-kit" 
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+            <button 
+              onClick={() => navigate('/qr-kit')} 
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-7 py-3.5 rounded-full text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer ring-2 ring-emerald-400/50"
+              title="Unduh QR Code & Stiker Sampel Siap Scan"
             >
               <Download size={17} /> Unduh QR Code & Stiker
-            </a>
+            </button>
             <button 
-              onClick={() => document.getElementById('masalah')?.scrollIntoView({ behavior: 'smooth' })} 
+              onClick={() => scrollTo('masalah')} 
               className="w-full sm:w-auto bg-white hover:bg-gray-50 text-[#213183] px-8 py-3.5 rounded-full text-sm font-bold transition-all shadow-lg cursor-pointer"
             >
               Pelajari Cara Kerja
