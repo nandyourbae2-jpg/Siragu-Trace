@@ -30,8 +30,9 @@ export function PublicQrPage() {
     retry: 1,
   });
 
-  // Offline / fallback data if backend is unreachable
-  const d = passport || {
+  // Offline / fallback data if backend is unreachable or returns invalid shape
+  const isPassportValid = Boolean(passport && typeof passport === 'object' && (passport as any).lot && (passport as any).qa);
+  const d = (isPassportValid ? passport : null) || {
     token: token || 'DEMOPASSPORT',
     humanSerial: `SGU-B26-0912-07-0001`,
     scanCount: 3,

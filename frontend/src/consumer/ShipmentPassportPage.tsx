@@ -28,8 +28,9 @@ export function ShipmentPassportPage() {
     retry: 1,
   });
 
-  // Fallback demo data
-  const s = shipmentData || {
+  // Fallback demo data if backend is unreachable or returns invalid shape
+  const isShipmentValid = Boolean(shipmentData && typeof shipmentData === 'object' && (shipmentData as any).shipmentNumber);
+  const s = (isShipmentValid ? shipmentData : null) || {
     token: token || 'BOXDEMO0001',
     shipmentNumber: 'SHP26-0001',
     boxCode: 'BOX-SHP26-0001-01',

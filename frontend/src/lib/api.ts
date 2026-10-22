@@ -52,12 +52,21 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     throw new ApiError(response.status, message, errData);
   }
 
-  // If response is 204 or empty
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
+  // If response is 204 No Content
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
     return response.json();
   }
-  return response.text() as unknown as T;
+
+  // If endpoint returned HTML (e.g. Vercel SPA index.html fallback for missing backend /api routes)
+  throw new ApiError(
+    404,
+    `Endpoint ${endpoint} returned non-JSON response (${contentType || 'none'}). Backend API may be unreachable.`,
+  );
 }
 
 export const api = {
