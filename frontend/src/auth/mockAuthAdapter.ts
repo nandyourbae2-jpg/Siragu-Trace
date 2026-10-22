@@ -160,31 +160,16 @@ export const mockAuthAdapter: AuthAdapter = {
 
   async logout(): Promise<void> {
     sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.setItem(LOGGED_OUT_KEY, 'true');
   },
 
   async restoreSession(): Promise<AuthSession | null> {
-    if (sessionStorage.getItem(LOGGED_OUT_KEY) === 'true') {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as AuthSession;
+    } catch {
       return null;
     }
-
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (raw) {
-      try {
-        return JSON.parse(raw) as AuthSession;
-      } catch {
-        // Fall through to default
-      }
-    }
-
-    // Default to owner session so all 11 features are immediately visible and testable
-    const defaultOwner = DEMO_USERS['owner@siragu.demo'].user;
-    const defaultSession: AuthSession = {
-      user: defaultOwner,
-      issuedAt: new Date().toISOString(),
-    };
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(defaultSession));
-    return defaultSession;
   },
 };
 
